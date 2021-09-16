@@ -1,0 +1,8 @@
+# IDEA
+.idea/
+*.iml
+# MIRAI
+mirai.yml
+device.json
+
+
