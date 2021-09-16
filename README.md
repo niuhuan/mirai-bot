@@ -60,9 +60,29 @@ func NewPluginInstance(customerPlugins []*client.Plugin) *client.Plugin {
 
 - 因为用interface会强制实现所有方法, 你需要实现太多方法了
 - 如果用embedded-struct将会失去IDE智能的提示, 每次追加一个方法都要删掉embedded-struct才能智能提示
-- 框架即是为了给程序员提供便利, 而不是提高逼格, 如果觉得这样的方法写起来很难看, 您可以写成 Id: id (包内的方法)
+- 框架和我的目标即是为了给程序员提供便利, 而不是提高逼格, 如果觉得这样的方法写起来很难看, 您可以写成 Id: id (包内的方法)
 - 我当然希望有更好的解决办法
 
+# 额外的api支持
+
+## client
+- func (c *Client) MessageSenderUin 获得消息的发送者, 支持所有类型的消息
+- func (c *Client) MessageContent 获得消息的内容, 支持所有类型的消息
+- func (c *Client) MessageFirstAt 获得消息中第一个AT的人
+- func (c *Client) CardNameInGroup 获取群名片
+- func (c *Client) MakeReplySendingMessage 创建一个回复消息, 如果是群员则自动带上@
+- func (c *Client) ReplyRawMessage 快捷回复 将消息按照原来的路径发回, 群员将自动带上@
+- func (c *Client) UploadReplyImage 上传图片, 接受人为消息源, 回复图片消息使用
+- func (c *Client) UploadReplyVideo 上传视频, 接受人为消息源, 回复视频消息使用
+- func (c *Client) AtElement 创建一个at
+- func (c *Client) ReplyText 快速回复一个文本消息
+
+# 运行须知
+
+- 第一次运行 会生成 mirai.yml 和 device.json, 修改后启动即可
+- 第一次登录 您可以安装安卓软件DeviceInfo, 参照内容修改device.json, 并将protocol改为2(安卓手表)/1(安卓手机)将绕过设备锁
+- 以后运行将很少失败, 您可以使用docker启动
+- 本bot使用了redis和mongo, 实现了农场游戏, mongo和redis解压可直接使用, 如果您没有条件下载, 可以删除农场包模块和database再运行.
 
 # 功能展示
 
