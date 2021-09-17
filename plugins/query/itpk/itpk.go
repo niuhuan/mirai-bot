@@ -92,7 +92,19 @@ func joke(client *client.Client, source interface{}) {
 }
 
 func talk(client *client.Client, sourceMessage interface{}) {
-	talkRequest, _ := http.NewRequest("GET", "http://i.itpk.cn/api.php?question="+strings.TrimSpace(client.MessageContent(sourceMessage)), nil)
+	all := ""
+	elements := client.MessageElements(sourceMessage)
+	for _, element := range elements {
+		if text, ok := element.(*message.TextElement); ok {
+			all += text.Content
+		}
+	}
+	all = strings.TrimSpace(all)
+	if  all == ""  {
+		client.ReplyText(sourceMessage,"什么事?")
+		return
+	}
+	talkRequest, _ := http.NewRequest("GET", "http://i.itpk.cn/api.php?question="+all, nil)
 	response, err := http.DefaultClient.Do(talkRequest)
 	if err != nil {
 		defer response.Body.Close()
