@@ -3,7 +3,7 @@ package gm
 import (
 	client2 "github.com/Mrs4s/MiraiGo/client"
 	"github.com/Mrs4s/MiraiGo/message"
-	"github.com/niuhuan/mirai-framework/client"
+	"github.com/niuhuan/mirai-framework"
 	"regexp"
 	"strconv"
 	"strings"
@@ -14,7 +14,7 @@ const name = "群管"
 
 var banRegexp, _ = regexp.Compile("^(\\s+)?b(\\s+)?([0-9]{1,5})(\\s+)?([smhd]?)(\\s+)?$")
 
-func mana(qqClient *client.Client, groupMessage *message.GroupMessage) bool {
+func mana(qqClient *mirai.Client, groupMessage *message.GroupMessage) bool {
 	groupInfo := qqClient.FindGroup(groupMessage.GroupCode)
 	if groupInfo != nil {
 		senderInfo := groupInfo.FindMember(groupMessage.Sender.Uin)
@@ -32,22 +32,22 @@ func mana(qqClient *client.Client, groupMessage *message.GroupMessage) bool {
 	return false
 }
 
-func NewPluginInstance() *client.Plugin {
-	return &client.Plugin{
+func NewPluginInstance() *mirai.Plugin {
+	return &mirai.Plugin{
 		Id: func() string {
 			return id
 		},
 		Name: func() string {
 			return name
 		},
-		OnPrivateMessage: func(client *client.Client, privateMessage *message.PrivateMessage) bool {
+		OnPrivateMessage: func(client *mirai.Client, privateMessage *message.PrivateMessage) bool {
 			if client.MessageContent(privateMessage) == name {
 				client.ReplyText(privateMessage, "群管功能只能在群中使用")
 				return true
 			}
 			return false
 		},
-		OnGroupMessage: func(client *client.Client, groupMessage *message.GroupMessage) bool {
+		OnGroupMessage: func(client *mirai.Client, groupMessage *message.GroupMessage) bool {
 			elements := groupMessage.Elements
 			if text, ok := (elements[0]).(*message.TextElement); ok {
 				if banRegexp.MatchString(text.Content) {
@@ -88,7 +88,7 @@ func NewPluginInstance() *client.Plugin {
 			}
 			return false
 		},
-		OnMessage: func(client *client.Client, messageInterface interface{}) bool {
+		OnMessage: func(client *mirai.Client, messageInterface interface{}) bool {
 			content := client.MessageContent(messageInterface)
 			if strings.EqualFold(name, content) {
 				client.ReplyText(messageInterface,

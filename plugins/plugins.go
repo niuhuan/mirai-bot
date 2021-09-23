@@ -8,16 +8,16 @@ import (
 	"github.com/niuhuan/mirai-bot/plugins/sys/log"
 	"github.com/niuhuan/mirai-bot/plugins/sys/menu"
 	"github.com/niuhuan/mirai-bot/plugins/tools/gm"
-	"github.com/niuhuan/mirai-framework/client"
+	"github.com/niuhuan/mirai-framework"
 )
 
-func Register(c *client.Client) {
+func Register(c *mirai.Client) {
 	// 事件监听器
-	actionsListeners := []*client.ActionListener{
+	actionsListeners := []*mirai.ActionListener{
 		log.NewListenerInstance(),
 	}
 	// 自定义组件
-	cPlugins := []*client.Plugin{
+	cPlugins := []*mirai.Plugin{
 		gm.NewPluginInstance(),
 		imglab.NewPluginInstance(),
 		farm.NewPluginInstance(),
@@ -25,7 +25,7 @@ func Register(c *client.Client) {
 		itpk.NewPluginInstance(),
 	}
 	// 系统组件
-	sPlugins := []*client.Plugin{
+	sPlugins := []*mirai.Plugin{
 		log.NewPluginInstance(),
 		// 忽略指定用户的发言 所以放在菜单的钱main
 		ignore.NewPluginInstance(),

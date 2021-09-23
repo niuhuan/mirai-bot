@@ -6,7 +6,7 @@ import (
 	"github.com/niuhuan/mirai-bot/database/redis"
 	"github.com/niuhuan/mirai-bot/login"
 	"github.com/niuhuan/mirai-bot/plugins"
-	"github.com/niuhuan/mirai-framework/client"
+	"github.com/niuhuan/mirai-framework"
 	"os"
 	"os/signal"
 )
@@ -18,7 +18,7 @@ func main() {
 	mongo.Test()
 	redis.Test()
 	// 新建客户端
-	client := client.NewClientMd5(config.Config.Bot.Account.Uin, config.Config.Bot.Account.PasswordBytes)
+	client := mirai.NewClientMd5(config.Config.Bot.Account.Uin, config.Config.Bot.Account.PasswordBytes)
 	// 注册插件
 	plugins.Register(client)
 	// 登录

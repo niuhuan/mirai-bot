@@ -5,7 +5,7 @@ import (
 	"github.com/Mrs4s/MiraiGo/message"
 	"github.com/niuhuan/mirai-bot/database/redis"
 	"github.com/niuhuan/mirai-bot/utils"
-	"github.com/niuhuan/mirai-framework/client"
+	"github.com/niuhuan/mirai-framework"
 	"math"
 	"math/rand"
 	"regexp"
@@ -16,22 +16,22 @@ import (
 
 const name = "农场"
 
-func NewPluginInstance() *client.Plugin {
-	return &client.Plugin{
+func NewPluginInstance() *mirai.Plugin {
+	return &mirai.Plugin{
 		Id: func() string {
 			return "FARM"
 		},
 		Name: func() string {
 			return name
 		},
-		OnPrivateMessage: func(client *client.Client, privateMessage *message.PrivateMessage) bool {
+		OnPrivateMessage: func(client *mirai.Client, privateMessage *message.PrivateMessage) bool {
 			if client.MessageContent(privateMessage) == name {
 				client.ReplyText(privateMessage, "农场功能只能在群中使用")
 				return true
 			}
 			return false
 		},
-		OnGroupMessage: func(client *client.Client, groupMessage *message.GroupMessage) bool {
+		OnGroupMessage: func(client *mirai.Client, groupMessage *message.GroupMessage) bool {
 			content := client.MessageContent(groupMessage)
 			if strings.EqualFold(content, "农场") {
 				printMenu(client, groupMessage)
@@ -126,7 +126,7 @@ func NewPluginInstance() *client.Plugin {
 	}
 }
 
-func printMenu(client *client.Client, groupMessage *message.GroupMessage) {
+func printMenu(client *mirai.Client, groupMessage *message.GroupMessage) {
 	client.ReplyText(groupMessage,
 		" === 农场菜单 === \n\n"+
 			"农场帮助\n"+
@@ -138,7 +138,7 @@ func printMenu(client *client.Client, groupMessage *message.GroupMessage) {
 			"购买土地 ")
 }
 
-func printHelp(client *client.Client, groupMessage *message.GroupMessage) {
+func printHelp(client *mirai.Client, groupMessage *message.GroupMessage) {
 	client.ReplyText(groupMessage,
 		"　　农场: 机器人主人无聊开发的小游戏\n\n"+
 			"货币系统: "+emojiSun+"(阳光)是农场中的基本货币\n\n"+
@@ -151,7 +151,7 @@ func printHelp(client *client.Client, groupMessage *message.GroupMessage) {
 			"    浇水: 获得经验值和金币, 并且增加产量, 一株植物在成熟之前每个阶段可以浇水一次")
 }
 
-func printHelpBuy(client *client.Client, groupMessage *message.GroupMessage) {
+func printHelpBuy(client *mirai.Client, groupMessage *message.GroupMessage) {
 	client.ReplyText(groupMessage,
 		"发送 \"购买+种子名称\" 购买相应种子, 例如 \"购买土豆\".\n\n"+
 			"发送 \"购买+种子名称+数量\" 购买多个种子, 例如 \"购买土豆15\".\n\n"+
@@ -159,23 +159,23 @@ func printHelpBuy(client *client.Client, groupMessage *message.GroupMessage) {
 			"使用\"农场商店\"或者\"守卫商店\"查看列表")
 }
 
-func printHelpSearch(client *client.Client, groupMessage *message.GroupMessage) {
+func printHelpSearch(client *mirai.Client, groupMessage *message.GroupMessage) {
 	client.ReplyText(groupMessage,
 		"发送 \"查询+种子名称\" 查询预计收益, 例如 \"查询土豆\".\n\n"+
 			"发送 \"查询+守卫名称\" 查询预计收益, 例如 \"查询"+petList[0].Name+"\".")
 }
 
-func printHelpPlant(client *client.Client, groupMessage *message.GroupMessage) {
+func printHelpPlant(client *mirai.Client, groupMessage *message.GroupMessage) {
 	client.ReplyText(groupMessage,
 		"发送 \"种+种子名称\" 种植作物, 例如 \"种土豆\".")
 }
 
-func printHelpSteal(client *client.Client, groupMessage *message.GroupMessage) {
+func printHelpSteal(client *mirai.Client, groupMessage *message.GroupMessage) {
 	client.ReplyText(groupMessage,
 		"发送 \"偷菜+@一个人\" 可以偷菜, 例如 \"偷菜@张三\".")
 }
 
-func printSelf(client *client.Client, groupMessage *message.GroupMessage) {
+func printSelf(client *mirai.Client, groupMessage *message.GroupMessage) {
 	assets := assets(sendUser(groupMessage))
 	client.ReplyText(groupMessage, fmt.Sprintf(
 		"阳光　%s　%d\n"+
@@ -188,7 +188,7 @@ func printSelf(client *client.Client, groupMessage *message.GroupMessage) {
 	))
 }
 
-func printLevels(client *client.Client, groupMessage *message.GroupMessage) {
+func printLevels(client *mirai.Client, groupMessage *message.GroupMessage) {
 	assets := assets(sendUser(groupMessage))
 	level := level(assets.Exp)
 	builder := strings.Builder{}
@@ -201,7 +201,7 @@ func printLevels(client *client.Client, groupMessage *message.GroupMessage) {
 	client.ReplyText(groupMessage, builder.String())
 }
 
-func buyField(client *client.Client, groupMessage *message.GroupMessage) {
+func buyField(client *mirai.Client, groupMessage *message.GroupMessage) {
 	// 加锁
 	lock := lockUnit(sendUser(groupMessage))
 	defer lock.Unlock()
@@ -218,7 +218,7 @@ func buyField(client *client.Client, groupMessage *message.GroupMessage) {
 	}
 }
 
-func search(client *client.Client, groupMessage *message.GroupMessage, name string) bool {
+func search(client *mirai.Client, groupMessage *message.GroupMessage, name string) bool {
 	for _, crop := range cropList {
 		if strings.EqualFold(crop.Name, name) {
 			searchCrop(client, groupMessage, crop)
@@ -228,7 +228,7 @@ func search(client *client.Client, groupMessage *message.GroupMessage, name stri
 	return false
 }
 
-func searchCrop(client *client.Client, groupMessage *message.GroupMessage, crop Crop) {
+func searchCrop(client *mirai.Client, groupMessage *message.GroupMessage, crop Crop) {
 	client.ReplyText(groupMessage,
 		fmt.Sprintf("%s　%s, %d级别作物, 种子售价%s%d, 成熟时间%d小时.", crop.FruitEmoji, crop.Name, crop.Level, emojiSun, crop.SeedPrice, utils.SumInts(crop.StepHours))+
 			fmt.Sprintf(" 每株结出果实%d到%d枚, 预计最少收益%s%d+%s%d。",
@@ -237,7 +237,7 @@ func searchCrop(client *client.Client, groupMessage *message.GroupMessage, crop 
 				emojiExp, crop.FruitsMin*crop.FruitExp))
 }
 
-func printCrops(client *client.Client, groupMessage *message.GroupMessage) {
+func printCrops(client *mirai.Client, groupMessage *message.GroupMessage) {
 	// 取得数据
 	assets := assets(sendUser(groupMessage))
 	level := level(assets.Exp)
@@ -264,7 +264,7 @@ func printCrops(client *client.Client, groupMessage *message.GroupMessage) {
 	client.ReplyText(groupMessage, builder.String())
 }
 
-func printPets(client *client.Client, groupMessage *message.GroupMessage) {
+func printPets(client *mirai.Client, groupMessage *message.GroupMessage) {
 	// 取得数据
 	assets := assets(sendUser(groupMessage))
 	level := level(assets.Exp)
@@ -284,7 +284,7 @@ func printPets(client *client.Client, groupMessage *message.GroupMessage) {
 	client.ReplyText(groupMessage, builder.String())
 }
 
-func buy(client *client.Client, groupMessage *message.GroupMessage, name string, number int) bool {
+func buy(client *mirai.Client, groupMessage *message.GroupMessage, name string, number int) bool {
 	// 加锁
 	lock := lockUnit(sendUser(groupMessage))
 	defer lock.Unlock()
@@ -304,7 +304,7 @@ func buy(client *client.Client, groupMessage *message.GroupMessage, name string,
 	return false
 }
 
-func buyCrop(client *client.Client, groupMessage *message.GroupMessage, crop Crop, number int) {
+func buyCrop(client *mirai.Client, groupMessage *message.GroupMessage, crop Crop, number int) {
 	assets := assets(sendUser(groupMessage))
 	level := level(assets.Exp)
 	stock := stock(sendUser(groupMessage))
@@ -329,7 +329,7 @@ func buyCrop(client *client.Client, groupMessage *message.GroupMessage, crop Cro
 	client.ReplyText(groupMessage, fmt.Sprintf("购买成功\n\n%s ↑ %d => %d\n%s ↓ %d => %d", crop.FruitEmoji, number, toInStock, emojiSun, downCoin, assets.Coins-downCoin))
 }
 
-func buyPet(client *client.Client, groupMessage *message.GroupMessage, pet Pet) {
+func buyPet(client *mirai.Client, groupMessage *message.GroupMessage, pet Pet) {
 	assets := assets(sendUser(groupMessage))
 	pets := pets(sendUser(groupMessage))
 	downCoin := int64(pet.Price)
@@ -347,7 +347,7 @@ func buyPet(client *client.Client, groupMessage *message.GroupMessage, pet Pet) 
 	client.ReplyText(groupMessage, fmt.Sprintf("购买成功\n\n%s %s\n%s ↓ %d => %d", emojiDog, pet.Name, emojiSun, downCoin, assets.Coins-downCoin))
 }
 
-func plant(client *client.Client, groupMessage *message.GroupMessage, name string) bool {
+func plant(client *mirai.Client, groupMessage *message.GroupMessage, name string) bool {
 	// 加锁
 	lock := lockUnit(sendUser(groupMessage))
 	defer lock.Unlock()
@@ -361,7 +361,7 @@ func plant(client *client.Client, groupMessage *message.GroupMessage, name strin
 	return false
 }
 
-func plantCrop(client *client.Client, groupMessage *message.GroupMessage, crop Crop) {
+func plantCrop(client *mirai.Client, groupMessage *message.GroupMessage, crop Crop) {
 	now := now()
 	builder := strings.Builder{}
 	assets := assets(sendUser(groupMessage))
@@ -402,7 +402,7 @@ func plantCrop(client *client.Client, groupMessage *message.GroupMessage, crop C
 	client.ReplyText(groupMessage, builder.String())
 }
 
-func collect(client *client.Client, groupMessage *message.GroupMessage) {
+func collect(client *mirai.Client, groupMessage *message.GroupMessage) {
 	// 加锁
 	lock := lockUnit(sendUser(groupMessage))
 	defer lock.Unlock()
@@ -483,7 +483,7 @@ func collect(client *client.Client, groupMessage *message.GroupMessage) {
 	client.ReplyText(groupMessage, builder.String())
 }
 
-func steal(client *client.Client, groupMessage *message.GroupMessage) {
+func steal(client *mirai.Client, groupMessage *message.GroupMessage) {
 	// 加锁
 	lock := lockUnit(sendUser(groupMessage))
 	defer lock.Unlock()
@@ -564,7 +564,7 @@ func steal(client *client.Client, groupMessage *message.GroupMessage) {
 	}
 }
 
-func water(client *client.Client, groupMessage *message.GroupMessage) {
+func water(client *mirai.Client, groupMessage *message.GroupMessage) {
 	// 加锁
 	lock := lockUnit(sendUser(groupMessage))
 	defer lock.Unlock()

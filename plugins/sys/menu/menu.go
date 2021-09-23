@@ -2,19 +2,19 @@ package menu
 
 import (
 	"fmt"
-	"github.com/niuhuan/mirai-framework/client"
+	"github.com/niuhuan/mirai-framework"
 	"strings"
 )
 
-func NewPluginInstance(customerPlugins []*client.Plugin) *client.Plugin {
-	return &client.Plugin{
+func NewPluginInstance(customerPlugins []*mirai.Plugin) *mirai.Plugin {
+	return &mirai.Plugin{
 		Id: func() string {
 			return "MENU"
 		},
 		Name: func() string {
 			return "菜单"
 		},
-		OnMessage: func(client *client.Client, messageInterface interface{}) bool {
+		OnMessage: func(client *mirai.Client, messageInterface interface{}) bool {
 			content := client.MessageContent(messageInterface)
 			if strings.EqualFold("菜单", content) {
 				builder := strings.Builder{}

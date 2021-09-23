@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/Mrs4s/MiraiGo/message"
 	"github.com/niuhuan/mirai-bot/database/mongo"
-	"github.com/niuhuan/mirai-framework/client"
+	"github.com/niuhuan/mirai-framework"
 	"go.mongodb.org/mongo-driver/bson"
 	"time"
 )
@@ -17,15 +17,15 @@ const (
 	TypeTemp           = "TEMP"
 )
 
-func NewPluginInstance() *client.Plugin {
-	return &client.Plugin{
+func NewPluginInstance() *mirai.Plugin {
+	return &mirai.Plugin{
 		Id: func() string {
 			return "LOG"
 		},
 		Name: func() string {
 			return "日志"
 		},
-		OnMessage: func(client *client.Client, messageInterface interface{}) bool {
+		OnMessage: func(client *mirai.Client, messageInterface interface{}) bool {
 			var m *bson.M
 
 			if privateMessage, b := (messageInterface).(*message.PrivateMessage); b {
@@ -79,15 +79,15 @@ func NewPluginInstance() *client.Plugin {
 	}
 }
 
-func NewListenerInstance() *client.ActionListener {
-	return &client.ActionListener{
+func NewListenerInstance() *mirai.ActionListener {
+	return &mirai.ActionListener{
 		Id: func() string {
 			return "LOG"
 		},
 		Name: func() string {
 			return "日志"
 		},
-		OnSendPrivateMessage: func(c *client.Client, message *message.PrivateMessage) bool {
+		OnSendPrivateMessage: func(c *mirai.Client, message *message.PrivateMessage) bool {
 			buff, err := c.FormatMessageElements(message.Elements)
 			if err == nil {
 				save(&bson.M{
@@ -103,7 +103,7 @@ func NewListenerInstance() *client.ActionListener {
 			}
 			return false
 		},
-		OnSendGroupMessage: func(c *client.Client, message *message.GroupMessage) bool {
+		OnSendGroupMessage: func(c *mirai.Client, message *message.GroupMessage) bool {
 			buff, err := c.FormatMessageElements(message.Elements)
 			if err == nil {
 				save(&bson.M{
@@ -119,7 +119,7 @@ func NewListenerInstance() *client.ActionListener {
 			}
 			return false
 		},
-		OnSendTempMessage: func(c *client.Client, message *message.TempMessage, target int64) bool {
+		OnSendTempMessage: func(c *mirai.Client, message *message.TempMessage, target int64) bool {
 			buff, err := c.FormatMessageElements(message.Elements)
 			if err == nil {
 				save(&bson.M{

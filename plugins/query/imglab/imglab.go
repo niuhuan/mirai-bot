@@ -2,7 +2,7 @@ package imglab
 
 import (
 	"crypto/tls"
-	"github.com/niuhuan/mirai-framework/client"
+	"github.com/niuhuan/mirai-framework"
 	logger "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
@@ -18,15 +18,15 @@ var httpClient = &http.Client{Transport: &http.Transport{
 const id = "IMG_LIB"
 const name = "图库"
 
-func NewPluginInstance() *client.Plugin {
-	return &client.Plugin{
+func NewPluginInstance() *mirai.Plugin {
+	return &mirai.Plugin{
 		Id: func() string {
 			return id
 		},
 		Name: func() string {
 			return name
 		},
-		OnMessage: func(client *client.Client, messageInterface interface{}) bool {
+		OnMessage: func(client *mirai.Client, messageInterface interface{}) bool {
 			content := client.MessageContent(messageInterface)
 			if content == "图库" {
 				client.ReplyText(messageInterface,
@@ -94,7 +94,7 @@ var fengjingSjRequest, _ = http.NewRequest("GET", "http://api.molure.cn/sjbz/api
 var illustrationRequest, _ = http.NewRequest("GET", "https://api.mz-moe.cn/img.php", nil)
 var wfRequest, _ = http.NewRequest("GET", "https://img.xjh.me/random_img.php", nil)
 
-func reply(client *client.Client, messageInterface interface{}, request *http.Request) {
+func reply(client *mirai.Client, messageInterface interface{}, request *http.Request) {
 	do, err := httpClient.Do(request)
 	if err == nil {
 		defer do.Body.Close()

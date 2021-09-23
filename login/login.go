@@ -5,19 +5,19 @@ import (
 	"fmt"
 	"github.com/Mrs4s/MiraiGo/client"
 	"github.com/niuhuan/mirai-bot/utils"
-	nc "github.com/niuhuan/mirai-framework/client"
+	"github.com/niuhuan/mirai-framework"
 	logger "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"strings"
 )
 
-func CmdLogin(c *nc.Client) {
+func CmdLogin(c *mirai.Client) {
 	console := bufio.NewReader(os.Stdin)
 	resp, err := c.Login()
 	for {
 		if err != nil {
-			logger.WithError(err).Fatal("unable to login")
+			logger.WithError(err).Fatal("无法登录")
 		}
 		var text string
 		if !resp.Success {

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Mrs4s/MiraiGo/message"
-	"github.com/niuhuan/mirai-framework/client"
+	"github.com/niuhuan/mirai-framework"
 	logger "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
@@ -15,15 +15,15 @@ const name = "闲聊"
 const jokePattern = "笑话"
 
 // NewPluginInstance 一个闲聊的插件
-func NewPluginInstance() *client.Plugin {
-	return &client.Plugin{
+func NewPluginInstance() *mirai.Plugin {
+	return &mirai.Plugin{
 		Id: func() string {
 			return "ITPK"
 		},
 		Name: func() string {
 			return name
 		},
-		OnMessage: func(client *client.Client, messageInterface interface{}) bool {
+		OnMessage: func(client *mirai.Client, messageInterface interface{}) bool {
 			content := client.MessageContent(messageInterface)
 			if strings.EqualFold(name, content) {
 				printHelp(client, messageInterface)
@@ -54,11 +54,11 @@ func NewPluginInstance() *client.Plugin {
 	}
 }
 
-func printHelp(c *client.Client, messageInterface interface{}) {
+func printHelp(c *mirai.Client, messageInterface interface{}) {
 	c.ReplyText(messageInterface, "可以直接发'笑话', 或者跟我私聊, 或者@我")
 }
 
-func joke(client *client.Client, source interface{}) {
+func joke(client *mirai.Client, source interface{}) {
 	var jockHttpRequest, _ = http.NewRequest("GET", "http://i.itpk.cn/api.php?question=笑话", nil)
 	response, err := http.DefaultClient.Do(jockHttpRequest)
 	if err != nil {
@@ -91,7 +91,7 @@ func joke(client *client.Client, source interface{}) {
 	client.ReplyText(source, fmt.Sprintf("%s\n\n%s", jock.Title, jock.Content))
 }
 
-func talk(client *client.Client, sourceMessage interface{}) {
+func talk(client *mirai.Client, sourceMessage interface{}) {
 	all := ""
 	elements := client.MessageElements(sourceMessage)
 	for _, element := range elements {
