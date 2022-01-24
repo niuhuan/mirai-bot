@@ -3,7 +3,6 @@ package plugins
 import (
 	"github.com/niuhuan/mirai-bot/plugins/games/farm"
 	"github.com/niuhuan/mirai-bot/plugins/query/imglab"
-	"github.com/niuhuan/mirai-bot/plugins/query/itpk"
 	"github.com/niuhuan/mirai-bot/plugins/sys/ignore"
 	"github.com/niuhuan/mirai-bot/plugins/sys/log"
 	"github.com/niuhuan/mirai-bot/plugins/sys/menu"
@@ -21,8 +20,7 @@ func Register(c *mirai.Client) {
 		gm.NewPluginInstance(),
 		imglab.NewPluginInstance(),
 		farm.NewPluginInstance(),
-		// 因为最后itpk会拦截所有私聊并做出回复, 所以一定要放在最后
-		itpk.NewPluginInstance(),
+		// 最后可以添加拦截所有私聊并做出回复的插件, 做一个连天系统
 	}
 	// 系统组件
 	sPlugins := []*mirai.Plugin{

@@ -203,7 +203,10 @@ func printLevels(client *mirai.Client, groupMessage *message.GroupMessage) {
 
 func buyField(client *mirai.Client, groupMessage *message.GroupMessage) {
 	// 加锁
-	lock := lockUnit(sendUser(groupMessage))
+	lock, err := lockUnit(sendUser(groupMessage))
+	if err != nil {
+		panic(err)
+	}
 	defer lock.Unlock()
 	//
 	assets := assets(sendUser(groupMessage))
@@ -286,7 +289,10 @@ func printPets(client *mirai.Client, groupMessage *message.GroupMessage) {
 
 func buy(client *mirai.Client, groupMessage *message.GroupMessage, name string, number int) bool {
 	// 加锁
-	lock := lockUnit(sendUser(groupMessage))
+	lock, err := lockUnit(sendUser(groupMessage))
+	if err != nil {
+		panic(err)
+	}
 	defer lock.Unlock()
 	//
 	for _, crop := range cropList {
@@ -349,7 +355,10 @@ func buyPet(client *mirai.Client, groupMessage *message.GroupMessage, pet Pet) {
 
 func plant(client *mirai.Client, groupMessage *message.GroupMessage, name string) bool {
 	// 加锁
-	lock := lockUnit(sendUser(groupMessage))
+	lock, err := lockUnit(sendUser(groupMessage))
+	if err != nil {
+		panic(err)
+	}
 	defer lock.Unlock()
 	//
 	for _, crop := range cropList {
@@ -404,7 +413,10 @@ func plantCrop(client *mirai.Client, groupMessage *message.GroupMessage, crop Cr
 
 func collect(client *mirai.Client, groupMessage *message.GroupMessage) {
 	// 加锁
-	lock := lockUnit(sendUser(groupMessage))
+	lock, err := lockUnit(sendUser(groupMessage))
+	if err != nil {
+		panic(err)
+	}
 	defer lock.Unlock()
 	//
 	now := now()
@@ -485,7 +497,10 @@ func collect(client *mirai.Client, groupMessage *message.GroupMessage) {
 
 func steal(client *mirai.Client, groupMessage *message.GroupMessage) {
 	// 加锁
-	lock := lockUnit(sendUser(groupMessage))
+	lock, err := lockUnit(sendUser(groupMessage))
+	if err != nil {
+		panic(err)
+	}
 	defer lock.Unlock()
 	//
 	firstAt := client.MessageFirstAt(groupMessage)
@@ -566,7 +581,10 @@ func steal(client *mirai.Client, groupMessage *message.GroupMessage) {
 
 func water(client *mirai.Client, groupMessage *message.GroupMessage) {
 	// 加锁
-	lock := lockUnit(sendUser(groupMessage))
+	lock, err := lockUnit(sendUser(groupMessage))
+	if err != nil {
+		panic(err)
+	}
 	defer lock.Unlock()
 	//
 	now := now()
@@ -624,6 +642,6 @@ func sendUser(groupMessage *message.GroupMessage) (groupCode int64, uin int64) {
 	return groupMessage.GroupCode, groupMessage.Sender.Uin
 }
 
-func lockUnit(groupCode int64, uin int64) *redis.Lock {
-	return redis.SaaSLock(fmt.Sprintf("BOT::GAME::FARM::%v::%v::LOCK", groupCode, uin), time.Minute)
+func lockUnit(groupCode int64, uin int64) (*redis.Lock, error) {
+	return redis.TryLock(fmt.Sprintf("BOT::GAME::FARM::%v::%v::LOCK", groupCode, uin), time.Second*5, time.Minute)
 }

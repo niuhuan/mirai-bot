@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	SET_IF_NOT_EXIST     = "NX" // 不存在则执行
-	SET_WITH_EXPIRE_TIME = "PX" // 过期时间(秒)  PX 毫秒
+	setIfNotExist     = "NX" // 不存在则执行
+	setWithExpireTime = "PX" // 过期时间(秒)  PX 毫秒
 )
 
 var (
@@ -51,7 +51,7 @@ func DelKey(key string) {
 func SetString(key string, value string, duration time.Duration) bool {
 	conn := RdPool.Get()
 	defer conn.Close()
-	_, err := conn.Do("SET", key, value, SET_WITH_EXPIRE_TIME, duration.Milliseconds())
+	_, err := conn.Do("SET", key, value, setWithExpireTime, duration.Milliseconds())
 	if err != nil {
 		logger.Info(err)
 	}
@@ -78,7 +78,7 @@ func GetStringError(key string) (string, error) {
 func SetByteArray(key string, value []byte, duration time.Duration) error {
 	conn := RdPool.Get()
 	defer conn.Close()
-	_, err := conn.Do("SET", key, value, SET_WITH_EXPIRE_TIME, duration.Milliseconds())
+	_, err := conn.Do("SET", key, value, setWithExpireTime, duration.Milliseconds())
 	return err
 }
 
@@ -96,7 +96,7 @@ func GetByteArray(key string) []byte {
 func SetInt(key string, value int, duration time.Duration) bool {
 	conn := RdPool.Get()
 	defer conn.Close()
-	_, err := conn.Do("SET", key, value, SET_WITH_EXPIRE_TIME, duration.Milliseconds())
+	_, err := conn.Do("SET", key, value, setWithExpireTime, duration.Milliseconds())
 	if err != nil {
 		logger.Info(err)
 	}
@@ -112,7 +112,7 @@ func GetInt(key string) (int, error) {
 func SetBool(key string, value bool, duration time.Duration) error {
 	conn := RdPool.Get()
 	defer conn.Close()
-	_, err := conn.Do("SET", key, value, SET_WITH_EXPIRE_TIME, duration.Milliseconds())
+	_, err := conn.Do("SET", key, value, setWithExpireTime, duration.Milliseconds())
 	return err
 }
 

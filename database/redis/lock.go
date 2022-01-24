@@ -1,83 +1,130 @@
 package redis
 
+
 import (
+	"bytes"
+	"errors"
+	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"github.com/niuhuan/mirai-bot/utils"
+	"runtime"
+	"strconv"
 	"time"
 )
 
-const (
-	SET_LOCK_SUCCESS      = "OK" // 操作成功
-	DEL_LOCK_SUCCESS      = 1    // lock 删除成功
-	DEL_LOCK_NON_EXISTENT = 0    // 删除lock key时,并不存在
+var (
+	ErrTimeout = errors.New("lock: obtain timeout")
+	BootId     = utils.GetSnowflakeIdString()
 )
 
-/*
-   redis 类型 字符串设置一个分布式锁 (哈希内部字段不支持过期判断,redis只支持顶级key过期)
-
-   @param key: 锁名,格式为  用户id_操作_方法
-   @param requestId:  客户端唯一id 用来指定锁不被其他线程(协程)删除
-   @param ex: 过期时间
-*/
-func RedisAddLock(key, requestId string, duration time.Duration) bool {
-	conn := RdPool.Get()
-	defer conn.Close()
-	msg, _ := redis.String(
-		conn.Do("SET", key, requestId, SET_IF_NOT_EXIST, SET_WITH_EXPIRE_TIME, duration.Milliseconds()),
-	)
-	if msg == SET_LOCK_SUCCESS {
-		return true
-	}
-	return false
+func GoID() uint64 {
+	b := make([]byte, 64)
+	b = b[:runtime.Stack(b, false)]
+	b = bytes.TrimPrefix(b, []byte("goroutine "))
+	b = b[:bytes.IndexByte(b, ' ')]
+	n, _ := strconv.ParseUint(string(b), 10, 64)
+	return n
 }
 
-/*
-   获得redis分布式锁的值
-
-   @param key:redis类型字符串的key值
-   @param return: redis类型字符串的value
-*/
-func RedisGetLock(key string) string {
-	conn := RdPool.Get()
-	defer conn.Close()
-	msg, _ := redis.String(conn.Do("GET", key))
-	return msg
-}
-
-/*
-   删除redis分布式锁
-
-   @param key:redis类型字符串的key值
-   @param requestId: 唯一值id,与value值对比,避免在分布式下其他实例删除该锁
-*/
-func RedisDelLock(key, requestId string) bool {
-	conn := RdPool.Get()
-	defer conn.Close()
-	if RedisGetLock(key) == requestId {
-		msg, _ := redis.Int64(conn.Do("DEL", key))
-		// 避免操作时间过长,自动过期时再删除返回结果为0
-		if msg == DEL_LOCK_SUCCESS || msg == DEL_LOCK_NON_EXISTENT {
-			return true
-		}
-		return false
-	}
-	return false
+func ContextId() string {
+	return fmt.Sprintf("%s::%d", BootId, GoID())
 }
 
 type Lock struct {
-	lockKey string
-	lockId  string
+	Key    string
+	Expire time.Duration
+	RdPool *redis.Pool
 }
 
-func (lock *Lock) Unlock() {
-	RedisDelLock(lock.lockKey, lock.lockId)
-}
+const lockScript = `
+if (redis.call('exists', KEYS[1]) == 0) then 
+  redis.call('hincrby', KEYS[1], ARGV[2], 1); 
+  redis.call('pexpire', KEYS[1], ARGV[1]); 
+  return nil; 
+end; 
+if (redis.call('hexists', KEYS[1], ARGV[2]) == 1) then 
+  redis.call('hincrby', KEYS[1], ARGV[2], 1); 
+  redis.call('pexpire', KEYS[1], ARGV[1]); 
+  return nil; 
+end; 
+return redis.call('pttl', KEYS[1]);
+`
 
-func SaaSLock(lockKey string, lockDuration time.Duration) *Lock {
-	lockId := utils.GetSnowflakeIdString()
-	RedisAddLock(lockKey, lockId, lockDuration)
-	return &Lock{
-		lockKey: lockKey,
-		lockId:  lockId,
+const unlockScript = `
+if (redis.call('hexists', KEYS[1], ARGV[2]) == 0) then 
+  return nil;
+end; 
+local counter = redis.call('hincrby', KEYS[1], ARGV[2], -1); 
+if (counter > 0) then 
+  redis.call('pexpire', KEYS[1], ARGV[1]); 
+  return 0; 
+else 
+  redis.call('del', KEYS[1]); 
+  return 1; 
+end; 
+return nil;
+`
+
+var lockScriptRedis = redis.NewScript(1, lockScript)
+var unlockScriptRedis = redis.NewScript(1, unlockScript)
+
+func (lock *Lock) Unlock() (bool, error) {
+	// connect
+	conn := lock.RdPool.Get()
+	defer conn.Close()
+	//
+	bool, err := redis.Bool(unlockScriptRedis.Do(conn, lock.Key, lock.Expire.Milliseconds(), ContextId()))
+	// already lease when if err == redis.ErrNil
+	// reentry counter > 0 when bool is false
+	if err == nil && bool {
+		conn.Do("PUBLISH", lock.Key, lock.Key)
 	}
+	return bool, err
+}
+
+func TryLock(key string, wait time.Duration, lease time.Duration) (*Lock, error) {
+	current := time.Now()
+	conn := RdPool.Get()
+	defer conn.Close()
+	// loop
+	for true {
+		// lock or reentry
+		ttl, err := redis.Uint64(lockScriptRedis.Do(conn, key, lease.Milliseconds(), ContextId()))
+		if err == redis.ErrNil {
+			return &Lock{
+				Key:    key,
+				Expire: lease,
+				RdPool: RdPool,
+			}, nil
+		} else if err != nil {
+			return nil, err
+		}
+		// timeout
+		currentOff := time.Now()
+		if currentOff.Sub(current) >= wait {
+			return nil, ErrTimeout
+		}
+		// subscribe
+		func() {
+			waitDuration := current.Add(wait).Sub(currentOff)
+			ttlDuration := time.Millisecond * time.Duration(ttl)
+			if ttlDuration < waitDuration {
+				waitDuration = ttlDuration
+			}
+			subConn := redis.PubSubConn{Conn: RdPool.Get()}
+			defer subConn.Close()
+			subConn.Subscribe(key)
+			for true {
+				switch subConn.ReceiveWithTimeout(waitDuration).(type) {
+				case redis.Message: // message
+				case error: // timeout (or redis error)
+					return
+				case redis.Subscription: // continue for
+				default: // else continue
+					continue
+				}
+			}
+		}()
+	}
+	return nil, ErrTimeout
 }
