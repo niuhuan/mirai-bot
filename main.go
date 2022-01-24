@@ -12,8 +12,11 @@ import (
 )
 
 func main() {
-	// 检查DeviceInfo
+	// 检查DeviceInfo, Config 初始化配置
 	config.InitDeviceInfo()
+	config.InitConfig()
+	mongo.InitMongo()
+	redis.InitRedis()
 	// 校验数据库链接是否正常
 	mongo.Test()
 	redis.Test()
@@ -28,4 +31,3 @@ func main() {
 	signal.Notify(ch, os.Interrupt, os.Kill)
 	<-ch
 }
-

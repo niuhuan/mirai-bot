@@ -19,7 +19,7 @@ var (
 	Nil    = redis.ErrNil
 )
 
-func init() {
+func InitRedis() {
 	uri := fmt.Sprintf(
 		"%s:%d",
 		config.Config.Database.Redis.Hostname,

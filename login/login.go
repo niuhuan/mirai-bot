@@ -12,6 +12,8 @@ import (
 	"strings"
 )
 
+var Login = false
+
 func CmdLogin(c *mirai.Client) {
 	console := bufio.NewReader(os.Stdin)
 	resp, err := c.Login()
@@ -98,4 +100,5 @@ func CmdLogin(c *mirai.Client) {
 	c.ReloadFriendList()
 	c.ReloadGroupList()
 	logger.Info("加载完成")
+	Login = true
 }

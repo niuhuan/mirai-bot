@@ -15,7 +15,7 @@ var (
 	dbName      string
 )
 
-func init() {
+func InitMongo() {
 	uri := fmt.Sprintf(
 		"mongodb://%s:%d/%s?w=majority",
 		config.Config.Database.Mongo.Hostname,

@@ -58,7 +58,7 @@ var Config struct {
 	}
 }
 
-func init() {
+func InitConfig() {
 	_, err := os.Stat(configFilename)
 	if err != nil {
 		err = ioutil.WriteFile(configFilename, []byte(defaultContent), os.FileMode(0644))
