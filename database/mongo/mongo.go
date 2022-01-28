@@ -27,7 +27,7 @@ func InitMongo() {
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	utils.PanicNotNil(err)
 	mongoClient = client
-	dbName = config.Config.Database.Mongo.Hostname
+	dbName = config.Config.Database.Mongo.Database
 }
 
 func Test() {
