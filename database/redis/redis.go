@@ -93,6 +93,12 @@ func GetByteArray(key string) []byte {
 	return value
 }
 
+func GetByteArrayError(key string) ([]byte, error) {
+	conn := RdPool.Get()
+	defer conn.Close()
+	return redis.Bytes(conn.Do("GET", key))
+}
+
 func SetInt(key string, value int, duration time.Duration) bool {
 	conn := RdPool.Get()
 	defer conn.Close()
