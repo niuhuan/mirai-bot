@@ -19,6 +19,7 @@ mirai-bot
 - (OPTIONAL) 第一次登录 您可以安装安卓软件DeviceInfo, 参照内容修改device.json, 并将protocol改为2(安卓手表)/1(安卓手机)将绕过设备锁
 
 依赖关系
+- 圈子插件 : mongo / redis
 - 农场插件 : mongo / redis
 
 # 功能展示
@@ -42,6 +43,14 @@ mirai-bot
 ### 群管
 
 ![](images/plugin06.jpg)
+
+### 圈子
+
+签到, 打劫, 或者兑换成其他游戏的货币
+
+![](images/sig01.png)
+
+![](images/sig02.png)
 
 ## 其他利用此模版实现的功能
 

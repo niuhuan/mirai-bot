@@ -1,6 +1,7 @@
 package plugins
 
 import (
+	"github.com/niuhuan/mirai-bot/plugins/games/circle"
 	"github.com/niuhuan/mirai-bot/plugins/games/farm"
 	"github.com/niuhuan/mirai-bot/plugins/query/imglab"
 	"github.com/niuhuan/mirai-bot/plugins/sys/ignore"
@@ -19,6 +20,7 @@ func Register(c *mirai.Client) {
 	// 自定义组件
 	cPlugins := []*mirai.Plugin{
 		gm.NewPluginInstance(),
+		circle.NewPluginInstance(),
 		imglab.NewPluginInstance(),
 		farm.NewPluginInstance(),
 		// 最后可以添加拦截所有私聊并做出回复的插件, 做一个连天系统
