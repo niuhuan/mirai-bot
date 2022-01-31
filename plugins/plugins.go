@@ -15,6 +15,7 @@ func Register(c *mirai.Client) {
 	actionsListeners := []*mirai.ActionListener{
 		log.NewListenerInstance(),
 	}
+	c.SetActionListeners(actionsListeners)
 	// 自定义组件
 	cPlugins := []*mirai.Plugin{
 		gm.NewPluginInstance(),
@@ -29,8 +30,11 @@ func Register(c *mirai.Client) {
 		ignore.NewPluginInstance(),
 		menu.NewPluginInstance(cPlugins),
 	}
-	c.SetActionListenersAndPlugins(
-		actionsListeners,
+	c.SetPlugins(
 		append(sPlugins, cPlugins...),
 	)
+	// 插件过滤器 true为阻止该插件
+	c.SetPluginBlocker(func(plugin *mirai.Plugin, contactType int, contactNumber int64) bool {
+		return false
+	})
 }

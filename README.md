@@ -23,9 +23,32 @@ mirai-bot
 
 # 功能展示
 
+## 模版功能
+
+### 菜单
+
 ![](images/plugin01.jpg)
+
+#### 农场
+
 ![](images/plugin02.jpg)
 ![](images/plugin03.jpg)
 ![](images/plugin04.jpg)
+
+### 图库
+
 ![](images/plugin05.jpg)
+
+### 群管
+
 ![](images/plugin06.jpg)
+
+## 其他利用此模版实现的功能
+
+### 视频互动冒险
+
+![](images/ext01.jpg)
+
+### 定时通知或2019新冠疫情播报
+
+![](images/ext02.jpg)
