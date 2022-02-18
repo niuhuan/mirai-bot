@@ -2,21 +2,78 @@ package login
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
+	qrcodeTerminal "github.com/Baozisoftware/qrcode-terminal-go"
 	"github.com/Mrs4s/MiraiGo/client"
 	"github.com/niuhuan/mirai-bot/utils"
 	"github.com/niuhuan/mirai-framework"
 	logger "github.com/sirupsen/logrus"
+	"github.com/tuotoo/qrcode"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 var Login = false
 
 func CmdLogin(c *mirai.Client) {
-	console := bufio.NewReader(os.Stdin)
 	resp, err := c.Login()
+	loginResult(c, resp, err)
+}
+
+func QrcodeLogin(c *mirai.Client) error {
+	rsp, err := c.FetchQRCode()
+	if err != nil {
+		return err
+	}
+	fi, err := qrcode.Decode(bytes.NewReader(rsp.ImageData))
+	if err != nil {
+		return err
+	}
+	_ = os.WriteFile("qrcode.png", rsp.ImageData, 0o644)
+	defer func() { _ = os.Remove("qrcode.png") }()
+	logger.Infof("请使用手机QQ扫描二维码 (qrcode.png) : ")
+	time.Sleep(time.Second)
+	qrcodeTerminal.New().Get(fi.Content).Print()
+	s, err := c.QueryQRCodeStatus(rsp.Sig)
+	if err != nil {
+		return err
+	}
+	prevState := s.State
+	for {
+		time.Sleep(time.Second)
+		s, _ = c.QueryQRCodeStatus(rsp.Sig)
+		if s == nil {
+			continue
+		}
+		if prevState == s.State {
+			continue
+		}
+		prevState = s.State
+		switch s.State {
+		case client.QRCodeCanceled:
+			logger.Fatalf("扫码被用户取消.")
+		case client.QRCodeTimeout:
+			logger.Fatalf("二维码过期")
+		case client.QRCodeWaitingForConfirm:
+			logger.Infof("扫码成功, 请在手机端确认登录.")
+		case client.QRCodeConfirmed:
+			res, err := c.QRCodeLogin(s.LoginInfo)
+			if err != nil {
+				return err
+			}
+			loginResult(c, res, err)
+		case client.QRCodeImageFetch, client.QRCodeWaitingForScan:
+			// ignore
+		}
+	}
+}
+
+func loginResult(c *mirai.Client, resp *client.LoginResponse, err error) {
+	console := bufio.NewReader(os.Stdin)
 	for {
 		if err != nil {
 			logger.WithError(err).Fatal("无法登录")
@@ -25,17 +82,43 @@ func CmdLogin(c *mirai.Client) {
 		if !resp.Success {
 			switch resp.Error {
 			case client.SliderNeededError:
-				if client.SystemDeviceInfo.Protocol == client.AndroidPhone {
-					logger.Warn("Android手机协议不支持滑动验证")
-					logger.Warn("请使用其他客户端类型")
-					os.Exit(2)
-				}
-				c.AllowSlider = false
-				c.Disconnect()
-				resp, err = c.Login()
+				logger.Info("请参考 https://github.com/mzdluo123/TxCaptchaHelper 获取并输入ticker")
+				logger.Info("Slider url : ", resp.VerifyUrl)
+				f := strings.Replace(resp.VerifyUrl, "ssl.captcha.qq.com", "txhelper.glitch.me", -1)
+				logger.Info("Slider url : ", f)
+				var a string
+				func() {
+					rsp, err := http.DefaultClient.Get(f)
+					if err != nil {
+						panic(err)
+					}
+					defer rsp.Body.Close()
+					buff, err := ioutil.ReadAll(rsp.Body)
+					a = string(buff)
+					if err != nil {
+						panic(err)
+					}
+				}()
+				println(a)
+				console.ReadString('\n')
+				func() {
+					rsp, err := http.DefaultClient.Get(f)
+					if err != nil {
+						panic(err)
+					}
+					defer rsp.Body.Close()
+					buff, err := ioutil.ReadAll(rsp.Body)
+					a = string(buff)
+					if err != nil {
+						panic(err)
+					}
+				}()
+				println(a)
+				resp, err = c.SubmitTicket(a)
 				continue
 			case client.NeedCaptcha:
-				file, err := ioutil.TempFile("mirai", utils.GetSnowflakeIdString()+".jpeg")
+				var file *os.File
+				file, err = ioutil.TempFile("mirai", utils.GetSnowflakeIdString()+".jpeg")
 				func() {
 					utils.GetSnowflakeIdString()
 					utils.PanicNotNil(err)

@@ -21,11 +21,13 @@ func main() {
 	mongo.Test()
 	redis.Test()
 	// 新建客户端
-	client := mirai.NewClientMd5(config.Config.Bot.Account.Uin, config.Config.Bot.Account.PasswordBytes)
+	// client := mirai.NewClientMd5(config.Config.Bot.Account.Uin, config.Config.Bot.Account.PasswordBytes)
+	client := mirai.NewClient(0, "")
 	// 注册插件
 	plugins.Register(client)
 	// 登录
-	login.CmdLogin(client)
+	// login.CmdLogin(client)
+	login.QrcodeLogin(client)
 	// 等待退出信号
 	ch := make(chan os.Signal)
 	signal.Notify(ch, os.Interrupt, os.Kill)
