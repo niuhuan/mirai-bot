@@ -19,9 +19,12 @@ import (
 
 var Login = false
 
-func CmdLogin(c *mirai.Client) {
+func CmdLogin(c *mirai.Client) error {
 	resp, err := c.Login()
-	loginResult(c, resp, err)
+	if err != nil {
+		return err
+	}
+	return loginResult(c, resp)
 }
 
 func QrcodeLogin(c *mirai.Client) error {
@@ -65,18 +68,20 @@ func QrcodeLogin(c *mirai.Client) error {
 			if err != nil {
 				return err
 			}
-			loginResult(c, res, err)
+			return loginResult(c, res)
 		case client.QRCodeImageFetch, client.QRCodeWaitingForScan:
 			// ignore
 		}
 	}
 }
 
-func loginResult(c *mirai.Client, resp *client.LoginResponse, err error) {
+func loginResult(c *mirai.Client, resp *client.LoginResponse) error {
+	var err error
 	console := bufio.NewReader(os.Stdin)
 	for {
 		if err != nil {
 			logger.WithError(err).Fatal("无法登录")
+			return err
 		}
 		var text string
 		if !resp.Success {
@@ -179,9 +184,5 @@ func loginResult(c *mirai.Client, resp *client.LoginResponse, err error) {
 		}
 		break
 	}
-	logger.Info("登录成功, 加载通讯录...")
-	c.ReloadFriendList()
-	c.ReloadGroupList()
-	logger.Info("加载完成")
-	Login = true
+	return nil
 }

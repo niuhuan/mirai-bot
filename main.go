@@ -7,6 +7,8 @@ import (
 	"github.com/niuhuan/mirai-bot/login"
 	"github.com/niuhuan/mirai-bot/plugins"
 	"github.com/niuhuan/mirai-framework"
+	logger "github.com/sirupsen/logrus"
+	"io/ioutil"
 	"os"
 	"os/signal"
 )
@@ -26,10 +28,24 @@ func main() {
 	// 注册插件
 	plugins.Register(client)
 	// 登录
+	buff, err := ioutil.ReadFile("session.token")
+	if err == nil {
+		err = client.TokenLogin(buff)
+	}
+	if err != nil {
+		err = login.QrcodeLogin(client)
+	}
 	// login.CmdLogin(client)
-	login.QrcodeLogin(client)
-	// 等待退出信号
-	ch := make(chan os.Signal)
-	signal.Notify(ch, os.Interrupt, os.Kill)
-	<-ch
+	if err == nil{
+		ioutil.WriteFile("session.token", client.GenToken(), os.FileMode(0600))
+		logger.Info("登录成功, 加载通讯录...")
+		client.ReloadFriendList()
+		client.ReloadGroupList()
+		logger.Info("加载完成")
+		login.Login = true
+		// 等待退出信号
+		ch := make(chan os.Signal)
+		signal.Notify(ch, os.Interrupt, os.Kill)
+		<-ch
+	}
 }
