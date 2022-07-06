@@ -2,6 +2,8 @@ mirai-bot
 =====
 一个基于MiraiFramework的QQ机器人
 
+PS: 已经跟随MiraiGo升级到 go1.18
+
 
 # 设计思路
 
